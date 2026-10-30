@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:id="@+id/content"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:orientation="vertical"
+        android:paddingHorizontal="20dp"
+        android:paddingTop="20dp"
+        android:paddingBottom="28dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/app_name"
+            android:textColor="@color/text"
+            android:textSize="24sp"
+            android:textStyle="bold" />
+
+        <TextView
+            style="@style/Body"
+            android:text="@string/subtitle" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/btn_start"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:backgroundTint="@color/accent"
+                android:text="@string/start_overlay"
+                android:textColor="#FFFFFFFF" />
+
+            <Button
+                android:id="@+id/btn_stop"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:layout_weight="1"
+                android:text="@string/stop_overlay" />
+        </LinearLayout>
+
+        <LinearLayout style="@style/Card">
+
+            <TextView
+                style="@style/CardTitle"
+                android:text="@string/permissions" />
+
+            <TextView
+                android:id="@+id/perm_overlay"
+                style="@style/Body" />
+
+            <Button
+                android:id="@+id/btn_perm_overlay"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/perm_overlay_grant" />
+
+            <TextView
+                android:id="@+id/perm_notif"
+                style="@style/Body" />
+
+            <Button
+                android:id="@+id/btn_perm_notif"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/perm_notif_grant" />
+        </LinearLayout>
+
+        <LinearLayout style="@style/Card">
+
+            <TextView
+                style="@style/CardTitle"
+                android:text="@string/home_page" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <EditText
+                    android:id="@+id/home_url"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:importantForAutofill="no"
+                    android:inputType="textUri"
+                    android:singleLine="true"
+                    android:textColor="@color/text" />
+
+                <Button
+                    android:id="@+id/btn_save_home"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/save" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout style="@style/Card">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    style="@style/CardTitle"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:text="@string/window_opacity" />
+
+                <TextView
+                    android:id="@+id/opacity_value"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/accent"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <TextView
+                style="@style/Body"
+                android:text="@string/opacity_help" />
+
+            <SeekBar
+                android:id="@+id/opacity_seek"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:max="100"
+                android:min="10" />
+        </LinearLayout>
+
+        <LinearLayout style="@style/Card">
+
+            <TextView
+                style="@style/CardTitle"
+                android:text="@string/brave" />
+
+            <TextView
+                android:id="@+id/brave_status"
+                style="@style/Body" />
+
+            <TextView
+                android:id="@+id/freeform_status"
+                style="@style/Body" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/btn_get_brave"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/brave_get" />
+
+                <Button
+                    android:id="@+id/btn_test_brave"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/brave_test" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout style="@style/Card">
+
+            <TextView
+                style="@style/CardTitle"
+                android:text="@string/tips" />
+
+            <TextView
+                style="@style/Body"
+                android:text="@string/tips_body" />
+        </LinearLayout>
+    </LinearLayout>
+</ScrollView>

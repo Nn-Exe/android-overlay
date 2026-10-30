@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingHorizontal="14dp"
+    android:paddingTop="12dp"
+    android:paddingBottom="6dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/opacity"
+            android:textColor="@color/text"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/opacity_value"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/accent"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <ImageButton
+            android:id="@+id/opacity_minus"
+            style="@style/BarButton"
+            android:contentDescription="@string/opacity_less"
+            android:src="@drawable/ic_remove" />
+
+        <SeekBar
+            android:id="@+id/opacity_seek"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:max="100"
+            android:min="10" />
+
+        <ImageButton
+            android:id="@+id/opacity_plus"
+            style="@style/BarButton"
+            android:contentDescription="@string/opacity_more"
+            android:src="@drawable/ic_add" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/opacity_25"
+            style="@style/OpacityPreset"
+            android:text="25%" />
+
+        <Button
+            android:id="@+id/opacity_50"
+            style="@style/OpacityPreset"
+            android:text="50%" />
+
+        <Button
+            android:id="@+id/opacity_75"
+            style="@style/OpacityPreset"
+            android:text="75%" />
+
+        <Button
+            android:id="@+id/opacity_100"
+            style="@style/OpacityPreset"
+            android:text="100%" />
+    </LinearLayout>
+</LinearLayout>

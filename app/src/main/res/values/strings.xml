@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Overlay Browser</string>
+    <string name="open_in_overlay">Open in floating browser</string>
+    <string name="tile_label">Float browser</string>
+    <string name="url_hint">Search Brave or type a URL</string>
+
+    <string name="back">Back</string>
+    <string name="forward">Forward</string>
+    <string name="reload">Reload</string>
+    <string name="menu">Menu</string>
+    <string name="lock">Lock position</string>
+    <string name="minimize">Minimize</string>
+    <string name="close">Close</string>
+    <string name="move">Drag to move</string>
+    <string name="resize">Drag to resize</string>
+    <string name="restore">Restore</string>
+    <string name="fit_video">Fit window to video</string>
+    <string name="exit_video">Back to the full page</string>
+
+    <string name="menu_home">Home</string>
+    <string name="menu_brave_floating">Open in Brave (floating window)</string>
+    <string name="menu_brave">Open in Brave</string>
+    <string name="menu_desktop">Desktop site</string>
+    <string name="menu_opacity">Opacity: %1$d%%</string>
+    <string name="opacity">Opacity</string>
+    <string name="opacity_less">Less opaque</string>
+    <string name="opacity_more">More opaque</string>
+    <string name="percent">%1$d%%</string>
+    <string name="menu_video_full">Fullscreen video uses whole screen</string>
+    <string name="menu_auto_fit">Auto-fit YouTube videos</string>
+    <string name="menu_set_home">Set this page as home</string>
+    <string name="menu_settings">Settings</string>
+
+    <string name="locked">Position locked</string>
+    <string name="unlocked">Position unlocked</string>
+    <string name="home_saved">Home page saved</string>
+    <string name="no_overlay_permission">Allow \"Display over other apps\" for Overlay Browser first</string>
+    <string name="no_brave">Brave isn\'t installed</string>
+    <string name="downloading">Downloading %1$s</string>
+    <string name="download_failed">Can\'t download this file</string>
+    <string name="no_app_for_link">No app can open this link</string>
+
+    <string name="notif_channel">Floating browser</string>
+    <string name="notif_showing">Floating — tap to minimize</string>
+    <string name="notif_minimized">Minimized — tap to show</string>
+
+    <!-- Settings screen -->
+    <string name="subtitle">A floating, resizable browser that sits on top of your games, launcher, or any app.</string>
+    <string name="permissions">Permissions</string>
+    <string name="perm_overlay_ok">✓ Display over other apps: allowed</string>
+    <string name="perm_overlay_missing">✗ Display over other apps: not allowed yet (required). Tap the button below, find Overlay Browser in the list, and turn it on.</string>
+    <string name="perm_overlay_grant">Allow display over other apps</string>
+    <string name="perm_notif_ok">✓ Notifications: allowed</string>
+    <string name="perm_notif_missing">✗ Notifications: off. Turn them on to get Show/Close controls in the notification shade.</string>
+    <string name="perm_notif_grant">Allow notifications</string>
+    <string name="start_overlay">Open floating browser</string>
+    <string name="stop_overlay">Close floating browser</string>
+    <string name="home_page">Home page</string>
+    <string name="window_opacity">Window opacity</string>
+    <string name="opacity_help">How see-through the floating window is, from 10% (barely there) to 100% (solid). Also under ⋮ → Opacity on the window. If you set it too faint to find, turn it back up here.</string>
+    <string name="save">Save</string>
+    <string name="brave">Brave</string>
+    <string name="brave_found">Brave found (%1$s). The menu can send any page to Brave.</string>
+    <string name="brave_missing">Brave isn\'t installed. The floating browser still works; it just can\'t hand pages off to Brave.</string>
+    <string name="brave_get">Get Brave</string>
+    <string name="brave_test">Open Brave in a floating window</string>
+    <string name="freeform_on">Freeform windows: on. Brave can open as a floating window.</string>
+    <string name="freeform_off">Freeform windows: off. Brave will open full screen. To make it float, go to Developer options → \"Enable freeform windows\", then restart.</string>
+    <string name="freeform_unknown">Freeform windows: couldn\'t detect. If Brave opens full screen, go to Developer options → \"Enable freeform windows\", then restart.</string>
+    <string name="tips">Tips</string>
+    <string name="tips_body">• Drag the ⠿ grip or the empty part of the toolbar to move the window. Drag a bottom corner to resize it.\n• 🔒 locks the position and size. — minimizes to a bubble: tap the bubble to restore it, long-press it for more options. Audio keeps playing while minimized.\n• Touching the page doesn\'t take your gamepad away from the game. The window only takes keyboard focus while you type. Tap outside it, or press Back, to give control back to the game.\n• Watching a video? Tap the ▣ button on the bar: the window shows only the player and takes the video\'s exact shape, and keeps that shape as you resize it. YouTube videos do this on their own (turn it off in ⋮). Tap ▣ again for the full page.\n• ⋮ → Opacity makes the window see-through (10–100%), handy for keeping an eye on the game behind a guide or video.\n• Add the \"Float browser\" tile in Quick Settings to show/hide the window from anywhere.\n• Share any link to \"Open in floating browser\" to open it in the floating window.</string>
+</resources>
