@@ -19,12 +19,12 @@ It won't take your gamepad away from the game. The window only takes input focus
 
 ## Install
 
-The ready-to-install APK is `dist/OverlayBrowser-1.0.apk`.
+Download `OverlayBrowser-1.0.apk` from the [latest release](https://github.com/Nn-Exe/android-overlay/releases/latest).
 
-With USB debugging on:
+With USB debugging on, from the folder you saved it to:
 
 ```bash
-adb install -r dist/OverlayBrowser-1.0.apk
+adb install -r OverlayBrowser-1.0.apk
 ```
 
 Or copy the APK to the device and open it with a file manager (allow "Install unknown apps" for that file manager).
