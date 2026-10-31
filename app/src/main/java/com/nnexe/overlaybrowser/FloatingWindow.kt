@@ -17,6 +17,8 @@ import android.os.Build
 import android.os.Environment
 import android.os.Handler
 import android.os.Looper
+import android.os.storage.StorageManager
+import android.provider.Settings
 import android.util.DisplayMetrics
 import android.util.Log
 import android.view.Gravity
@@ -37,8 +39,10 @@ import android.webkit.JsResult
 import android.webkit.PermissionRequest
 import android.webkit.RenderProcessGoneDetail
 import android.webkit.URLUtil
+import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
+import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.EditText
@@ -51,6 +55,9 @@ import android.widget.SeekBar
 import android.widget.TextView
 import android.widget.Toast
 import org.json.JSONArray
+import org.lsposed.hiddenapibypass.HiddenApiBypass
+import java.io.File
+import java.lang.reflect.Field
 import java.net.URISyntaxException
 import kotlin.math.abs
 import kotlin.math.max
@@ -95,6 +102,7 @@ class FloatingWindow(
     private val barSpacer: View = root.findViewById(R.id.bar_spacer)
     private val btnFit: ImageButton = root.findViewById(R.id.btn_fit)
     private val btnMenu: ImageButton = root.findViewById(R.id.btn_menu)
+    private val btnMute: ImageButton = root.findViewById(R.id.btn_mute)
     private val btnLock: ImageButton = root.findViewById(R.id.btn_lock)
     private val btnMinimize: ImageButton = root.findViewById(R.id.btn_minimize)
     private val btnClose: ImageButton = root.findViewById(R.id.btn_close)
@@ -121,16 +129,23 @@ class FloatingWindow(
     private var mobileUserAgent = ""
     private var currentUrl = ""
     private var locked = prefs.locked
+    private var muted = prefs.muted
     var isMinimized = false
         private set
 
     /** True while the window holds keyboard focus (and so takes the gamepad from the app behind). */
     private var typing = false
     private var webEditing = false
+    private var scriptInjected = false
     /** The page's own fullscreen element (e.g. YouTube's fullscreen button), shown in the browser area. */
     private var fullscreenView: View? = null
     private var fullscreenCallback: WebChromeClient.CustomViewCallback? = null
+    private var pageFullscreen = false
     private var activeDialog: AlertDialog? = null
+    private var fileHintFolder = false
+    private var fileHintMultiple = false
+    private var fileHintTime = 0L
+    private var lastBrowsedDir: File? = null
 
     /** The page's main video as last reported by the page script; 0x0 when there is none. */
     private var videoW = 0
@@ -148,7 +163,8 @@ class FloatingWindow(
     /** Page where the user turned auto-fit off by hand; don't switch it straight back on there. */
     private var autoFitDeclinedUrl: String? = null
 
-    private val videoMaximized get() = fullscreenView != null && prefs.videoFillsScreen
+    private val isFullscreen get() = fullscreenView != null || pageFullscreen
+    private val videoMaximized get() = isFullscreen && prefs.videoFillsScreen
     private val videoAspect get() = if (videoW > 0 && videoH > 0) videoW.toFloat() / videoH else 0f
 
     init {
@@ -179,10 +195,12 @@ class FloatingWindow(
                 }
             }
         }
+        updateMuteUi()
         updateLockUi()
         applyWindowLayout()
         wm.addView(root, params)
         rootAdded = true
+        applyMuteToWebView(webView)
         webView.loadUrl(initialUrl?.let { Prefs.toUrl(it) } ?: prefs.lastUrl ?: prefs.homeUrl)
     }
 
@@ -259,7 +277,6 @@ class FloatingWindow(
         WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
         WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
             WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
-            WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH or
             WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
             WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
         PixelFormat.TRANSLUCENT,
@@ -361,12 +378,13 @@ class FloatingWindow(
             }
         }
         val focusFlag = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+        val outsideFlag = WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH
         if (typing && !isMinimized) {
-            params.flags = params.flags and focusFlag.inv()
+            params.flags = (params.flags and focusFlag.inv()) or outsideFlag
             params.softInputMode = WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE or
                 WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING
         } else {
-            params.flags = params.flags or focusFlag
+            params.flags = (params.flags or focusFlag) and outsideFlag.inv()
             params.softInputMode = WindowManager.LayoutParams.SOFT_INPUT_STATE_UNSPECIFIED
         }
         if (rootAdded) wm.updateViewLayout(root, params)
@@ -455,11 +473,11 @@ class FloatingWindow(
         val coveredTop: Int
         val coveredBottom: Int
         if (Build.VERSION.SDK_INT >= 30) {
-            // Gesture zones too: a drag that starts there becomes "go home" or "open the shade".
+            // Only visible system bars and cutouts; mandatorySystemGestures are always non-zero at screen
+            // edges even in immersive launchers like Cocoon FE and would trigger an endless layout loop.
             val i = insets.getInsets(
                 WindowInsets.Type.systemBars() or
-                    WindowInsets.Type.displayCutout() or
-                    WindowInsets.Type.mandatorySystemGestures(),
+                    WindowInsets.Type.displayCutout(),
             )
             coveredTop = i.top
             coveredBottom = i.bottom
@@ -470,20 +488,17 @@ class FloatingWindow(
             coveredBottom = insets.systemWindowInsetBottom
         }
         if (coveredTop <= 0 && coveredBottom <= 0) return
-        // Insets describe the frame from the last layout pass, which may lag behind params; measure from that frame.
-        val frame = IntArray(2)
-        root.getLocationOnScreen(frame)
+        val s = screen()
         var top = bounds.top
         var bottom = bounds.bottom
-        if (coveredTop > 0) {
-            val shift = frame[1] + coveredTop - top
-            if (shift > 0) {
-                top += shift
-                bottom += shift
-            }
+        if (coveredTop > 0 && top < coveredTop) {
+            val shift = (coveredTop - top).coerceAtMost((s.height() - coveredBottom - bottom).coerceAtLeast(0))
+            top += shift
+            bottom += shift
         }
-        if (coveredBottom > 0) bottom = bottom.coerceAtMost(frame[1] + root.height - coveredBottom)
-        if (bottom - top < minH()) bottom = top + minH()
+        if (coveredBottom > 0 && bottom > s.height() - coveredBottom) {
+            bottom = (s.height() - coveredBottom).coerceAtLeast(top + minH())
+        }
         if (top == bounds.top && bottom == bounds.bottom) return
         // In video mode a shorter window must also get narrower, or the video gets black bars.
         val right = if (videoMode && fitAspect > 0f) {
@@ -491,9 +506,10 @@ class FloatingWindow(
         } else {
             bounds.right
         }
+        val prev = Rect(bounds)
         bounds.set(bounds.left, top, right, bottom)
         clampBounds()
-        applyWindowLayout()
+        if (bounds != prev) applyWindowLayout()
     }
 
     private fun trackKeyboard(insets: WindowInsets) {
@@ -629,13 +645,14 @@ class FloatingWindow(
 
         btnBack.setOnClickListener {
             when {
-                fullscreenView != null -> exitFullscreen()
+                isFullscreen -> exitFullscreen()
                 webView.canGoBack() -> webView.goBack()
             }
         }
         btnReload.setOnClickListener { webView.reload() }
         btnFit.setOnClickListener { if (videoMode) exitVideoMode(byUser = true) else enterVideoMode(VideoSource.MANUAL) }
         btnMenu.setOnClickListener { showMenu() }
+        btnMute.setOnClickListener { toggleMute() }
         btnLock.setOnClickListener { toggleLock() }
         btnMinimize.setOnClickListener { minimize() }
         btnClose.setOnClickListener { listener.onCloseRequested() }
@@ -674,12 +691,26 @@ class FloatingWindow(
         }
         val widthDp = root.width / density
         val fit = if (btnFit.visibility == View.VISIBLE) 34 else 0
-        btnReload.visibility = if (widthDp >= 340 + fit) View.VISIBLE else View.GONE
-        btnBack.visibility = if (widthDp >= 290 + fit) View.VISIBLE else View.GONE
+        btnReload.visibility = if (widthDp >= 374 + fit) View.VISIBLE else View.GONE
+        btnBack.visibility = if (widthDp >= 324 + fit) View.VISIBLE else View.GONE
     }
 
     private fun updateNavButtons() {
-        btnBack.alpha = if (webView.canGoBack() || fullscreenView != null) 1f else 0.35f
+        btnBack.alpha = if (webView.canGoBack() || isFullscreen) 1f else 0.35f
+    }
+
+    private fun toggleMute() {
+        muted = !muted
+        prefs.muted = muted
+        updateMuteUi()
+        applyMuteToWebView(webView)
+        Toast.makeText(ctx, if (muted) R.string.muted else R.string.unmuted, Toast.LENGTH_SHORT).show()
+    }
+
+    private fun updateMuteUi() {
+        btnMute.setImageResource(if (muted) R.drawable.ic_volume_off else R.drawable.ic_volume_on)
+        btnMute.imageTintList = ColorStateList.valueOf(ctx.getColor(if (muted) R.color.accent else R.color.text))
+        btnMute.contentDescription = ctx.getString(if (muted) R.string.unmute else R.string.mute)
     }
 
     private fun toggleLock() {
@@ -720,8 +751,12 @@ class FloatingWindow(
             isCheckable = true
             isChecked = prefs.autoFitVideo
         }
-        menu.add(0, MENU_SET_HOME, 9, R.string.menu_set_home)
-        menu.add(0, MENU_SETTINGS, 10, R.string.menu_settings)
+        menu.add(0, MENU_BLOCK_ADS, 9, R.string.menu_block_ads).apply {
+            isCheckable = true
+            isChecked = prefs.blockAds
+        }
+        menu.add(0, MENU_SET_HOME, 10, R.string.menu_set_home)
+        menu.add(0, MENU_SETTINGS, 11, R.string.menu_settings)
         popup.setOnMenuItemClickListener { item ->
             when (item.itemId) {
                 MENU_FORWARD -> webView.goForward()
@@ -743,6 +778,11 @@ class FloatingWindow(
                 MENU_AUTO_FIT -> {
                     prefs.autoFitVideo = !prefs.autoFitVideo
                     if (prefs.autoFitVideo) autoFitDeclinedUrl = null
+                }
+                MENU_BLOCK_ADS -> {
+                    prefs.blockAds = !prefs.blockAds
+                    webView.evaluateJavascript("window.__ovlSetBlockAds && window.__ovlSetBlockAds(${prefs.blockAds})", null)
+                    webView.reload()
                 }
                 MENU_SET_HOME -> {
                     prefs.homeUrl = pageUrl()
@@ -842,7 +882,7 @@ class FloatingWindow(
 
     private fun handleBack() {
         when {
-            fullscreenView != null -> exitFullscreen()
+            isFullscreen -> exitFullscreen()
             typing -> stopTyping()
             webView.canGoBack() -> webView.goBack()
         }
@@ -852,14 +892,29 @@ class FloatingWindow(
 
     // region WebView
 
-    private fun createWebView(): WebView = WebView(ctx).apply {
+    private fun createWebView(): WebView = object : WebView(ctx) {
+        override fun onWindowVisibilityChanged(visibility: Int) {
+            // Keep the WebView active and un-throttled even when custom launchers (e.g. Cocoon FE)
+            // or full-screen games change window/display visibility states underneath.
+            super.onWindowVisibilityChanged(View.VISIBLE)
+        }
+
+        override fun onWindowFocusChanged(hasWindowFocus: Boolean) {
+            super.onWindowFocusChanged(true)
+        }
+    }.apply {
         setBackgroundColor(Color.WHITE)
         isFocusable = true
         isFocusableInTouchMode = true
+        // Keep the renderer at foreground priority even though our service has no visible Activity
+        // and the overlay window uses FLAG_NOT_FOCUSABLE.
+        setRendererPriorityPolicy(WebView.RENDERER_PRIORITY_IMPORTANT, false)
         settings.apply {
             javaScriptEnabled = true
             domStorageEnabled = true
             mediaPlaybackRequiresUserGesture = false
+            allowFileAccess = true
+            allowContentAccess = true
             loadWithOverviewMode = true
             useWideViewPort = true
             builtInZoomControls = true
@@ -901,6 +956,7 @@ class FloatingWindow(
         old.destroy()
         webView = createWebView()
         webHolder.addView(webView, 0, matchParent())
+        applyMuteToWebView(webView)
         webView.loadUrl(pageUrl())
     }
 
@@ -910,6 +966,27 @@ class FloatingWindow(
 
     private fun inject(view: WebView) {
         view.evaluateJavascript(PAGE_SCRIPT, null)
+        view.evaluateJavascript("window.__ovlSetBlockAds && window.__ovlSetBlockAds(${prefs.blockAds})", null)
+        applyMuteToWebView(view)
+    }
+
+    private fun applyMuteToWebView(view: WebView) {
+        view.evaluateJavascript("window.__ovlSetMuted && window.__ovlSetMuted($muted)", null)
+        try {
+            val providerField = HiddenApiBypass.getInstanceFields(WebView::class.java)
+                .filterIsInstance<Field>()
+                .firstOrNull { it.name == "mProvider" }
+                ?.apply { isAccessible = true }
+            val provider = providerField?.get(view) ?: return
+            val awContentsField = provider.javaClass.declaredFields
+                .firstOrNull { it.name == "mAwContents" }
+                ?.apply { isAccessible = true }
+            val awContents = awContentsField?.get(provider) ?: return
+            awContents.javaClass.getMethod("setAudioMuted", Boolean::class.javaPrimitiveType)
+                .invoke(awContents, muted)
+        } catch (_: Throwable) {
+            // Page script fallback handles HTML5 video/audio muting if internal field names differ.
+        }
     }
 
     private fun openExternally(intent: Intent): Boolean {
@@ -956,6 +1033,13 @@ class FloatingWindow(
     }
 
     private inner class Client : WebViewClient() {
+        override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse? {
+            if (prefs.blockAds && AdBlocker.shouldBlock(request)) {
+                return AdBlocker.emptyResponse()
+            }
+            return super.shouldInterceptRequest(view, request)
+        }
+
         override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
             val uri = request.url
             return when (uri.scheme?.lowercase()) {
@@ -976,6 +1060,8 @@ class FloatingWindow(
 
         override fun onPageStarted(view: WebView, url: String, favicon: Bitmap?) {
             setUrlText(url)
+            scriptInjected = false
+            pageFullscreen = false
             // A new page: the old video is gone. (YouTube moving between videos doesn't come through here.)
             videoW = 0
             videoH = 0
@@ -983,10 +1069,12 @@ class FloatingWindow(
         }
 
         override fun onPageCommitVisible(view: WebView, url: String) {
+            scriptInjected = true
             inject(view)
         }
 
         override fun onPageFinished(view: WebView, url: String) {
+            scriptInjected = true
             inject(view)
             updateNavButtons()
         }
@@ -1018,7 +1106,10 @@ class FloatingWindow(
             } else {
                 progress.visibility = View.INVISIBLE
             }
-            if (newProgress >= 30) inject(view)
+            if (newProgress >= 30 && !scriptInjected) {
+                scriptInjected = true
+                inject(view)
+            }
         }
 
         override fun onShowCustomView(view: View, callback: CustomViewCallback) {
@@ -1027,6 +1118,21 @@ class FloatingWindow(
 
         override fun onHideCustomView() {
             exitFullscreen()
+        }
+
+        override fun onShowFileChooser(
+            webView: WebView,
+            filePathCallback: ValueCallback<Array<Uri>>,
+            fileChooserParams: FileChooserParams?,
+        ): Boolean {
+            val recentHint = System.currentTimeMillis() - fileHintTime < 3000L
+            val mode = fileChooserParams?.mode ?: 0
+            // FileChooserParams.MODE_OPEN_FOLDER is 2 in Chromium WebView
+            val pickFolder = (mode == 2) || (recentHint && fileHintFolder)
+            val allowMultiple = (mode == FileChooserParams.MODE_OPEN_MULTIPLE) || (recentHint && fileHintMultiple) || pickFolder
+            val acceptTypes = fileChooserParams?.acceptTypes
+            showFileChooserDialog(filePathCallback, pickFolder, allowMultiple, acceptTypes)
+            return true
         }
 
         override fun onJsAlert(view: WebView, url: String?, message: String?, result: JsResult): Boolean {
@@ -1104,11 +1210,36 @@ class FloatingWindow(
         fun video(info: String) {
             main.post { onVideoInfo(info) }
         }
+
+        @JavascriptInterface
+        fun fullscreen(on: Boolean) {
+            main.post { onPageFullscreen(on) }
+        }
+
+        @JavascriptInterface
+        fun fileHint(isDir: Boolean, multiple: Boolean) {
+            fileHintFolder = isDir
+            fileHintMultiple = multiple
+            fileHintTime = System.currentTimeMillis()
+        }
     }
 
     // endregion
 
     // region Page fullscreen (e.g. YouTube's fullscreen button)
+
+    private fun onPageFullscreen(on: Boolean) {
+        if (pageFullscreen == on) return
+        pageFullscreen = on
+        if (on) {
+            if (!prefs.videoFillsScreen) enterVideoMode(VideoSource.FULLSCREEN)
+        } else if (videoMode && videoSource == VideoSource.FULLSCREEN) {
+            exitVideoMode(byUser = false)
+        }
+        applyWindowLayout()
+        updateLockUi()
+        updateNavButtons()
+    }
 
     private fun enterFullscreen(view: View, callback: WebChromeClient.CustomViewCallback) {
         if (fullscreenView != null) {
@@ -1118,6 +1249,7 @@ class FloatingWindow(
         fullscreenView = view
         fullscreenCallback = callback
         view.setBackgroundColor(Color.BLACK)
+        webView.visibility = View.GONE
         // The video fills the browser area; the toolbar stays so the window can still be moved or minimized.
         webHolder.addView(view, matchParent())
         applyWindowLayout()
@@ -1128,12 +1260,21 @@ class FloatingWindow(
     }
 
     private fun exitFullscreen() {
-        val view = fullscreenView ?: return
+        val view = fullscreenView
+        val wasPageFs = pageFullscreen
+        if (view == null && !wasPageFs) return
         fullscreenView = null
-        webHolder.removeView(view)
+        pageFullscreen = false
+        if (view != null) {
+            webHolder.removeView(view)
+            webView.visibility = View.VISIBLE
+        }
         val callback = fullscreenCallback
         fullscreenCallback = null
         callback?.onCustomViewHidden()
+        if (wasPageFs) {
+            webView.evaluateJavascript("window.__ovlExitFullscreen && window.__ovlExitFullscreen()", null)
+        }
         if (videoMode && videoSource == VideoSource.FULLSCREEN) exitVideoMode(byUser = false)
         applyWindowLayout()
         updateLockUi()
@@ -1146,22 +1287,23 @@ class FloatingWindow(
 
     /** Leaves video mode once the video has really gone, not just blinked out while switching source. */
     private val exitWhenVideoGone = Runnable {
-        if (videoMode && videoW == 0 && fullscreenView == null) exitVideoMode(byUser = false)
+        if (videoMode && videoW == 0 && !isFullscreen) exitVideoMode(byUser = false)
     }
 
     private fun onVideoInfo(info: String) {
         val v = info.split(',').map { it.toIntOrNull() ?: 0 }
-        if (v.size < 5) return
+        if (v.size < 3) return
         videoW = v[0]
         videoH = v[1]
         videoPlaying = v[2] == 1
+        webView.keepScreenOn = videoPlaying
         updateFitButton()
         main.removeCallbacks(exitWhenVideoGone)
         when {
             // Between videos (or a video and an ad) there's briefly no video at all; wait before giving up.
-            videoMode && videoW == 0 && fullscreenView == null -> main.postDelayed(exitWhenVideoGone, VIDEO_GONE_GRACE_MS)
+            videoMode && videoW == 0 && !isFullscreen -> main.postDelayed(exitWhenVideoGone, VIDEO_GONE_GRACE_MS)
             // The video changed shape (next video, a Short, an ad): reshape the window to match.
-            videoMode && fitAspect > 0f && videoAspect > 0f && abs(videoAspect - fitAspect) / fitAspect > 0.03f ->
+            videoMode && !videoMaximized && fitAspect > 0f && videoAspect > 0f && abs(videoAspect - fitAspect) / fitAspect > 0.03f ->
                 placeVideoWindow(initial = false)
             !videoMode && shouldAutoFit() -> enterVideoMode(VideoSource.AUTO)
         }
@@ -1187,7 +1329,7 @@ class FloatingWindow(
         videoModePending = true
         webView.evaluateJavascript("window.__ovlVideoMode ? window.__ovlVideoMode(true) : false") { result ->
             videoModePending = false
-            if (videoMode || (result != "true" && fullscreenView == null)) return@evaluateJavascript
+            if (videoMode || (result != "true" && !isFullscreen)) return@evaluateJavascript
             stopTyping()
             videoMode = true
             videoSource = source
@@ -1263,7 +1405,7 @@ class FloatingWindow(
         dragHandle.layoutParams = dragHandle.layoutParams.apply { width = dp(if (videoMode) COMPACT_GRIP_DP else 28) }
         val size = dp(if (videoMode) COMPACT_BUTTON_DP else 34)
         val pad = dp(if (videoMode) 5 else 7)
-        for (b in listOf(btnBack, btnReload, btnFit, btnMenu, btnLock, btnMinimize, btnClose)) {
+        for (b in listOf(btnBack, btnReload, btnFit, btnMenu, btnMute, btnLock, btnMinimize, btnClose)) {
             b.layoutParams = b.layoutParams.apply {
                 width = size
                 height = size
@@ -1297,8 +1439,8 @@ class FloatingWindow(
     private fun contentArea(r: Rect) =
         (r.width() - chromeWidth()).coerceAtLeast(1).toFloat() * (r.height() - chromeHeight()).coerceAtLeast(1)
 
-    /** Width the slim video-mode bar needs: grip, then fit, menu, lock, minimize and close buttons. */
-    private fun compactBarWidth() = dp(2 + COMPACT_GRIP_DP + 5 * COMPACT_BUTTON_DP + 4)
+    /** Width the slim video-mode bar needs: grip, then fit, menu, mute, lock, minimize and close buttons. */
+    private fun compactBarWidth() = dp(2 + COMPACT_GRIP_DP + 6 * COMPACT_BUTTON_DP + 4)
 
     /** Smallest video width: as wide as the bar if the video's height allows it, so the shape holds. */
     private fun minVideoContentWidth(maxContentHeight: Float) =
@@ -1369,6 +1511,210 @@ class FloatingWindow(
         webView.evaluateJavascript("window.__ovlApplySelect && window.__ovlApplySelect(${JSONArray(indices)})", null)
     }
 
+    private fun storageRoots(): List<Pair<String, File>> {
+        val roots = mutableListOf<Pair<String, File>>()
+        val internal = Environment.getExternalStorageDirectory()
+        if (internal.exists()) {
+            roots.add("📁 Internal Storage (${internal.name})" to internal)
+        }
+        val downloads = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+        if (downloads.exists()) {
+            roots.add("⬇️ Downloads" to downloads)
+        }
+        // Discover external SD card volumes via StorageManager and /storage
+        val seenPaths = mutableSetOf(internal.canonicalPath)
+        try {
+            val sm = ctx.getSystemService(StorageManager::class.java)
+            if (Build.VERSION.SDK_INT >= 30) {
+                for (vol in sm.storageVolumes) {
+                    val dir = vol.directory ?: continue
+                    val canon = dir.canonicalPath
+                    if (seenPaths.add(canon) && dir.exists()) {
+                        val desc = vol.getDescription(ctx).ifBlank { dir.name }
+                        roots.add("💾 $desc (${dir.name})" to dir)
+                    }
+                }
+            }
+        } catch (_: Exception) {}
+        try {
+            File("/storage").listFiles()?.forEach { dir ->
+                if (dir.isDirectory && dir.name != "emulated" && dir.name != "self") {
+                    val canon = dir.canonicalPath
+                    if (seenPaths.add(canon)) {
+                        roots.add("💾 SD Card (${dir.name})" to dir)
+                    }
+                }
+            }
+        } catch (_: Exception) {}
+        return roots
+    }
+
+    private fun hasAllFilesAccess(): Boolean =
+        if (Build.VERSION.SDK_INT >= 30) Environment.isExternalStorageManager() else true
+
+    private fun showFileChooserDialog(
+        callback: ValueCallback<Array<Uri>>,
+        pickFolder: Boolean,
+        allowMultiple: Boolean,
+        acceptTypes: Array<String>?,
+    ) {
+        val startDir = lastBrowsedDir?.takeIf { it.exists() && it.isDirectory }
+            ?: Environment.getExternalStorageDirectory()
+        browseDirectoryDialog(callback, startDir, pickFolder, allowMultiple, acceptTypes)
+    }
+
+    private fun browseDirectoryDialog(
+        callback: ValueCallback<Array<Uri>>,
+        dir: File,
+        pickFolder: Boolean,
+        allowMultiple: Boolean,
+        acceptTypes: Array<String>?,
+    ) {
+        lastBrowsedDir = dir
+        val entries = mutableListOf<String>()
+        val actions = mutableListOf<() -> Unit>()
+        var resolved = false
+
+        fun finishWith(uris: Array<Uri>?) {
+            if (resolved) return
+            resolved = true
+            callback.onReceiveValue(uris)
+        }
+
+        // 1. System File/Folder Picker option (always works for Internal + SD Card via Android DocumentsUI)
+        entries.add(if (pickFolder) "🗂️ System Folder Picker (Internal / SD Card)…" else "🗂️ System File Picker (Internal / SD Card)…")
+        actions.add {
+            resolved = true
+            FilePickerActivity.launch(ctx, pickFolder, allowMultiple, acceptTypes) { uris ->
+                callback.onReceiveValue(uris)
+            }
+        }
+
+        // 2. If picking a folder (or user wants to pick a whole folder), allow selecting current directory directly
+        if (hasAllFilesAccess()) {
+            entries.add("✅ Use This Folder: ${dir.name.ifEmpty { dir.path }}")
+            actions.add {
+                val files = collectLocalFiles(dir, maxFiles = 500)
+                val uris = if (files.isNotEmpty()) {
+                    files.map { Uri.fromFile(it) }.toTypedArray()
+                } else {
+                    arrayOf(Uri.fromFile(dir))
+                }
+                finishWith(uris)
+            }
+        } else if (Build.VERSION.SDK_INT >= 30) {
+            entries.add("🔓 Allow Direct Storage Browsing (Internal + SD Card)…")
+            actions.add {
+                finishWith(null)
+                try {
+                    val intent = Intent(
+                        Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION,
+                        Uri.parse("package:${ctx.packageName}"),
+                    ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    ctx.startActivity(intent)
+                } catch (_: Exception) {
+                    val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    ctx.startActivity(intent)
+                }
+            }
+        }
+
+        // 3. Switch storage root (Internal Storage / SD Card / Downloads)
+        val roots = storageRoots()
+        if (roots.size > 1) {
+            for ((label, rootDir) in roots) {
+                if (rootDir.absolutePath != dir.absolutePath) {
+                    entries.add(label)
+                    actions.add {
+                        resolved = true
+                        browseDirectoryDialog(callback, rootDir, pickFolder, allowMultiple, acceptTypes)
+                    }
+                }
+            }
+        }
+
+        // 4. Parent directory navigation
+        val parent = dir.parentFile
+        if (parent != null && parent.canRead()) {
+            entries.add("⬆️ .. (Parent folder)")
+            actions.add {
+                resolved = true
+                browseDirectoryDialog(callback, parent, pickFolder, allowMultiple, acceptTypes)
+            }
+        }
+
+        // 5. List folders and files in current directory
+        val children = try {
+            dir.listFiles()?.sortedWith(compareBy<File>({ !it.isDirectory }, { it.name.lowercase() }))
+                ?: emptyList()
+        } catch (_: Exception) {
+            emptyList()
+        }
+
+        for (child in children) {
+            if (child.name.startsWith(".")) continue
+            if (child.isDirectory) {
+                entries.add("📁 ${child.name}/")
+                actions.add {
+                    resolved = true
+                    browseDirectoryDialog(callback, child, pickFolder, allowMultiple, acceptTypes)
+                }
+            } else if (!pickFolder) {
+                entries.add("📄 ${child.name}")
+                actions.add {
+                    finishWith(arrayOf(Uri.fromFile(child)))
+                }
+            }
+        }
+
+        val title = if (pickFolder) "Select Folder: ${dir.path}" else "Select File: ${dir.path}"
+        val builder = AlertDialog.Builder(ctx)
+            .setTitle(title)
+            .setItems(entries.toTypedArray()) { dialog, which ->
+                val act = actions.getOrNull(which)
+                dialog.dismiss()
+                act?.invoke()
+            }
+            .setNegativeButton(android.R.string.cancel) { _, _ -> finishWith(null) }
+            .setOnDismissListener {
+                activeDialog = null
+                if (!resolved) finishWith(null)
+            }
+
+        if (showDialog(builder) == null) {
+            // If minimized, fall back to System Picker directly
+            resolved = true
+            FilePickerActivity.launch(ctx, pickFolder, allowMultiple, acceptTypes) { uris ->
+                callback.onReceiveValue(uris)
+            }
+        }
+    }
+
+    private fun collectLocalFiles(root: File, maxFiles: Int): List<File> {
+        val out = mutableListOf<File>()
+        val queue = ArrayDeque<File>()
+        queue.add(root)
+        while (queue.isNotEmpty() && out.size < maxFiles) {
+            val current = queue.removeFirst()
+            val list = try {
+                current.listFiles()
+            } catch (_: Exception) {
+                null
+            } ?: continue
+            for (f in list) {
+                if (f.name.startsWith(".")) continue
+                if (f.isDirectory) {
+                    queue.add(f)
+                } else if (f.isFile) {
+                    out.add(f)
+                    if (out.size >= maxFiles) break
+                }
+            }
+        }
+        return out
+    }
+
     private fun hostOf(url: String?): String = url?.let { Uri.parse(it).host } ?: ctx.getString(R.string.app_name)
 
     // endregion
@@ -1390,6 +1736,7 @@ class FloatingWindow(
         const val MENU_SET_HOME = 9
         const val MENU_SETTINGS = 10
         const val MENU_AUTO_FIT = 11
+        const val MENU_BLOCK_ADS = 12
         const val MIN_VIDEO_WIDTH_DP = 120
         const val VIDEO_GONE_GRACE_MS = 3000L
         const val COMPACT_GRIP_DP = 22

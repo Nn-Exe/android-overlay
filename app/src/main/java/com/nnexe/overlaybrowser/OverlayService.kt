@@ -40,7 +40,7 @@ class OverlayService : Service(), FloatingWindow.Listener {
         if (intent?.action == ACTION_REFRESH) {
             // Cheap path: called repeatedly while a slider on the settings screen moves.
             window?.refreshAppearance()
-            return START_NOT_STICKY
+            return START_STICKY
         }
         goForeground()
         if (!Settings.canDrawOverlays(this)) {
@@ -73,7 +73,7 @@ class OverlayService : Service(), FloatingWindow.Listener {
             }
         }
         updateNotification()
-        return START_NOT_STICKY
+        return START_STICKY
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
@@ -139,7 +139,13 @@ class OverlayService : Service(), FloatingWindow.Listener {
     private fun goForeground() {
         val notification = buildNotification()
         if (Build.VERSION.SDK_INT >= 34) {
-            startForeground(NOTIF_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
+            startForeground(
+                NOTIF_ID,
+                notification,
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK or ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE,
+            )
+        } else if (Build.VERSION.SDK_INT >= 29) {
+            startForeground(NOTIF_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK)
         } else {
             startForeground(NOTIF_ID, notification)
         }

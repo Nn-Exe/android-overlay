@@ -30,6 +30,7 @@ class MainActivity : Activity() {
     private lateinit var freeformStatus: TextView
     private lateinit var btnGetBrave: Button
     private lateinit var btnTestBrave: Button
+    private var requestingPermission = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -49,10 +50,14 @@ class MainActivity : Activity() {
         findViewById<Button>(R.id.btn_start).setOnClickListener { startOverlay() }
         findViewById<Button>(R.id.btn_stop).setOnClickListener { OverlayService.stop(this) }
         btnPermOverlay.setOnClickListener {
+            requestingPermission = true
             startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName")))
         }
         btnPermNotif.setOnClickListener {
-            if (Build.VERSION.SDK_INT >= 33) requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), REQ_NOTIF)
+            if (Build.VERSION.SDK_INT >= 33) {
+                requestingPermission = true
+                requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), REQ_NOTIF)
+            }
         }
 
         homeUrl.setText(prefs.homeUrl)
@@ -98,14 +103,27 @@ class MainActivity : Activity() {
 
     override fun onResume() {
         super.onResume()
+        requestingPermission = false
         refresh()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        // Remove the Activity task when leaving while the overlay is running so custom frontends like
+        // Cocoon FE don't treat our task as a backgrounded game and suspend/freeze the process, and
+        // Chromium doesn't see a stopped Activity in ApplicationStatus.
+        if (OverlayService.isRunning && !requestingPermission && !isChangingConfigurations) {
+            finishAndRemoveTask()
+        }
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        requestingPermission = false
         if (requestCode == REQ_NOTIF && grantResults.firstOrNull() != PackageManager.PERMISSION_GRANTED) {
             // Denied twice: Android stops showing the prompt, so send them to the app's notification settings.
             if (Build.VERSION.SDK_INT >= 33 && !shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS)) {
+                requestingPermission = true
                 startActivity(
                     Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).putExtra(Settings.EXTRA_APP_PACKAGE, packageName),
                 )
@@ -121,8 +139,9 @@ class MainActivity : Activity() {
             return
         }
         OverlayService.show(this)
-        // Step out of the way so the window floats over whatever was underneath.
-        moveTaskToBack(true)
+        // Finish and remove our Activity task rather than moving it to the back so launchers like
+        // Cocoon FE don't suspend our process as a backgrounded game task.
+        finishAndRemoveTask()
     }
 
     private fun refresh() {

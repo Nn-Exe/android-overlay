@@ -9,6 +9,8 @@
     <string name="forward">Forward</string>
     <string name="reload">Reload</string>
     <string name="menu">Menu</string>
+    <string name="mute">Mute browser</string>
+    <string name="unmute">Unmute browser</string>
     <string name="lock">Lock position</string>
     <string name="minimize">Minimize</string>
     <string name="close">Close</string>
@@ -29,11 +31,14 @@
     <string name="percent">%1$d%%</string>
     <string name="menu_video_full">Fullscreen video uses whole screen</string>
     <string name="menu_auto_fit">Auto-fit YouTube videos</string>
+    <string name="menu_block_ads">Block ads</string>
     <string name="menu_set_home">Set this page as home</string>
     <string name="menu_settings">Settings</string>
 
     <string name="locked">Position locked</string>
     <string name="unlocked">Position unlocked</string>
+    <string name="muted">Browser muted</string>
+    <string name="unmuted">Browser unmuted</string>
     <string name="home_saved">Home page saved</string>
     <string name="no_overlay_permission">Allow \"Display over other apps\" for Overlay Browser first</string>
     <string name="no_brave">Brave isn\'t installed</string>
@@ -58,7 +63,7 @@
     <string name="stop_overlay">Close floating browser</string>
     <string name="home_page">Home page</string>
     <string name="window_opacity">Window opacity</string>
-    <string name="opacity_help">How see-through the floating window is, from 10% (barely there) to 100% (solid). Also under ⋮ → Opacity on the window. If you set it too faint to find, turn it back up here.</string>
+    <string name="opacity_help" formatted="false">How see-through the floating window is, from 10% (barely there) to 100% (solid). Also under ⋮ → Opacity on the window. If you set it too faint to find, turn it back up here.</string>
     <string name="save">Save</string>
     <string name="brave">Brave</string>
     <string name="brave_found">Brave found (%1$s). The menu can send any page to Brave.</string>

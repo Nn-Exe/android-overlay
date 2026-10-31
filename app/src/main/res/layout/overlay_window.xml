@@ -82,6 +82,12 @@
                 android:src="@drawable/ic_more" />
 
             <ImageButton
+                android:id="@+id/btn_mute"
+                style="@style/BarButton"
+                android:contentDescription="@string/mute"
+                android:src="@drawable/ic_volume_on" />
+
+            <ImageButton
                 android:id="@+id/btn_lock"
                 style="@style/BarButton"
                 android:contentDescription="@string/lock"

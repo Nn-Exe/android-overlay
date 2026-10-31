@@ -30,6 +30,12 @@ class Prefs(context: Context) {
     var locked: Boolean
         get() = sp.getBoolean("locked", false)
         set(v) = sp.edit().putBoolean("locked", v).apply()
+    var muted: Boolean
+        get() = sp.getBoolean("muted", false)
+        set(v) = sp.edit().putBoolean("muted", v).apply()
+    var blockAds: Boolean
+        get() = sp.getBoolean("block_ads", true)
+        set(v) = sp.edit().putBoolean("block_ads", v).apply()
     var opacity: Float
         get() = sp.getFloat("opacity", 1f).coerceIn(MIN_OPACITY, 1f)
         set(v) = sp.edit().putFloat("opacity", v).apply()
