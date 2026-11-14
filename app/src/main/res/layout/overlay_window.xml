@@ -4,6 +4,10 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/bg_window"
+    android:clipChildren="true"
+    android:clipToPadding="true"
+    android:clipToOutline="true"
+    android:elevation="8dp"
     android:padding="1dp">
 
     <LinearLayout
@@ -60,7 +64,6 @@
                 android:textColorHint="@color/text_dim"
                 android:textSize="13sp" />
 
-            <!-- Takes the address bar's place in video mode, so the bar's empty middle still drags the window. -->
             <View
                 android:id="@+id/bar_spacer"
                 android:layout_width="0dp"

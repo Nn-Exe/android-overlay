@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="se_manage">Manage search engines</string>
+    <string name="se_manage_title">Search engines</string>
+    <string name="se_tap_default">Tap a name to make it the default. Use {query} in custom URLs.</string>
+    <string name="se_add">Add</string>
+    <string name="se_done">Done</string>
+    <string name="se_add_title">Add search engine</string>
+    <string name="se_edit_title">Edit search engine</string>
+    <string name="se_name_hint">Name</string>
+    <string name="se_url_hint">https://example.com/search?q={query}</string>
+    <string name="se_name_required">Enter a name for the search engine.</string>
+    <string name="se_save">Save</string>
+    <string name="se_cancel">Cancel</string>
+    <string name="se_delete">Delete</string>
+    <string name="se_delete_title">Delete %1$s?</string>
+    <string name="se_move_up">Move up</string>
+    <string name="se_move_down">Move down</string>
+</resources>

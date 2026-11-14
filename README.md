@@ -89,3 +89,22 @@ Code map (`app/src/main/java/com/nnexe/overlaybrowser/`):
 - `FilePickerActivity.kt`: system DocumentsUI file and folder picker trampoline.
 - `Brave.kt`: Brave detection and hand-off, including the freeform launch.
 - `MainActivity.kt`: setup screen. `OverlayTileService.kt`: Quick Settings tile. `OpenInOverlayActivity.kt`: share/open-link entry point.
+
+
+## v1.1
+
+- Fullscreen overlay mode with restore-to-previous-size behavior.
+- Address-bar search providers: Brave Search (default), Google, DuckDuckGo, and a custom search URL template using `{query}`.
+- Refreshed dark UI palette and search-engine settings.
+- Rounded floating-window clipping so WebView content stays inside the window shape.
+
+### Build
+
+Requires JDK 17 and Android SDK. Run:
+
+```bash
+chmod +x ./gradlew
+./gradlew --no-daemon assembleDebug assembleRelease
+```
+
+The release APK is signed with the repository's existing debug signing configuration for personal sideloading. It is not a Play Store production signing key.

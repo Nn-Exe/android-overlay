@@ -10,8 +10,11 @@ import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.view.View
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
+import android.widget.Spinner
 import android.widget.SeekBar
 import android.widget.TextView
 import android.widget.Toast
@@ -62,10 +65,34 @@ class MainActivity : Activity() {
 
         homeUrl.setText(prefs.homeUrl)
         findViewById<Button>(R.id.btn_save_home).setOnClickListener {
-            val url = Prefs.toUrl(homeUrl.text.toString()) ?: Prefs.DEFAULT_HOME
+            val url = Prefs.toUrl(homeUrl.text.toString(), prefs.searchEngine, prefs.customSearchUrl) ?: Prefs.DEFAULT_HOME
             prefs.homeUrl = url
             homeUrl.setText(url)
             Toast.makeText(this, R.string.home_saved, Toast.LENGTH_SHORT).show()
+        }
+
+        val searchEngine = findViewById<Spinner>(R.id.search_engine)
+        val searchManager = SearchEngineManager(this)
+        var engineList = searchManager.engines()
+        fun bindEngines() {
+            engineList = searchManager.engines()
+            searchEngine.adapter = ArrayAdapter(
+                this,
+                android.R.layout.simple_spinner_item,
+                engineList.map { it.name },
+            ).also { it.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item) }
+            val selected = engineList.indexOfFirst { it.id == searchManager.defaultId }.coerceAtLeast(0)
+            searchEngine.setSelection(selected, false)
+        }
+        bindEngines()
+        searchEngine.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                engineList.getOrNull(position)?.let { searchManager.defaultId = it.id }
+            }
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
+        }
+        findViewById<Button>(R.id.btn_manage_search).setOnClickListener {
+            SearchEngineDialog.show(this, searchManager) { bindEngines() }
         }
 
         val opacityValue = findViewById<TextView>(R.id.opacity_value)

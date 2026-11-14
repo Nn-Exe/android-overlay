@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="bg">#FF141519</color>
-    <color name="window">#FF1E1F24</color>
-    <color name="window_stroke">#FF3A3D46</color>
-    <color name="bar">#FF26282F</color>
-    <color name="url_bg">#FF353842</color>
+    <color name="bg">#FF0D0F14</color>
+    <color name="window">#FF171A23</color>
+    <color name="window_stroke">#FF343A4C</color>
+    <color name="bar">#FF202431</color>
+    <color name="url_bg">#FF2B3040</color>
     <color name="text">#FFECECEC</color>
     <color name="text_dim">#FF9AA0A6</color>
-    <!-- Brave orange -->
-    <color name="accent">#FFFB542B</color>
+    <!-- Soft periwinkle accent -->
+    <color name="accent">#FF8B9CFF</color>
     <color name="ok">#FF5BC26A</color>
     <color name="icon_bg">#FF1E1F24</color>
 </resources>

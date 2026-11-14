@@ -3,7 +3,21 @@
     <string name="app_name">Overlay Browser</string>
     <string name="open_in_overlay">Open in floating browser</string>
     <string name="tile_label">Float browser</string>
-    <string name="url_hint">Search Brave or type a URL</string>
+    <string name="url_hint">Search or enter a URL</string>
+    <string-array name="search_engines">
+        <item>Brave Search</item>
+        <item>Google</item>
+        <item>DuckDuckGo</item>
+        <item>Custom</item>
+    </string-array>
+    <string name="app_version">VERSION 1.1 • FLOATING WEBVIEW</string>
+    <string name="search_engine">Search engine</string>
+    <string name="search_engine_help">Choose where searches from the address bar go. Custom URLs must contain {query}.</string>
+    <string name="custom_search_hint">https://your-search.example/?q={query}</string>
+    <string name="save_search">Save search URL</string>
+    <string name="search_engine_saved">Search engine settings saved</string>
+    <string name="search_template_invalid">Enter a valid http:// or https:// search URL</string>
+    <string name="search_template_placeholder">Your search URL must include {query}</string>
 
     <string name="back">Back</string>
     <string name="forward">Forward</string>
@@ -21,6 +35,24 @@
     <string name="exit_video">Back to the full page</string>
 
     <string name="menu_home">Home</string>
+    <string name="menu_fullscreen">Fullscreen window</string>
+    <string name="menu_exit_fullscreen">Exit fullscreen window</string>
+    <string name="menu_add_bookmark">Bookmark this page</string>
+    <string name="menu_bookmarks">Bookmarks</string>
+    <string name="menu_find_page">Find in page</string>
+    <string name="menu_copy_link">Copy page link</string>
+    <string name="menu_share_page">Share page</string>
+    <string name="bookmark_saved">Bookmark saved</string>
+    <string name="bookmark_removed">Bookmark removed</string>
+    <string name="no_bookmarks">No bookmarks saved yet</string>
+    <string name="manage_bookmarks">Manage bookmarks</string>
+    <string name="open_bookmark">Open</string>
+    <string name="remove_bookmark">Remove bookmark</string>
+    <string name="link_copied">Page link copied</string>
+    <string name="find_hint">Text to find</string>
+    <string name="find_next">Find</string>
+    <string name="clear_find">Clear matches</string>
+    <string name="find_matches">Matches: %1$d</string>
     <string name="menu_brave_floating">Open in Brave (floating window)</string>
     <string name="menu_brave">Open in Brave</string>
     <string name="menu_desktop">Desktop site</string>

@@ -4,9 +4,10 @@ import android.content.Context
 import android.util.AttributeSet
 import android.view.KeyEvent
 import android.view.MotionEvent
+import android.view.ViewOutlineProvider
 import android.widget.FrameLayout
 
-/** Root of the floating window: reports taps outside the window, the first touch inside it, and Back. */
+/** Root of the floating window: reports outside taps and clips all browser content to its rounded shape. */
 class OverlayRootView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
@@ -14,6 +15,15 @@ class OverlayRootView @JvmOverloads constructor(
 
     var onOutsideTouch: (() -> Unit)? = null
     var onBack: (() -> Unit)? = null
+
+    init {
+        // A rounded background alone only paints rounded corners; it does not clip the WebView.
+        // Use the background's convex outline so pages and video cannot bleed outside the window.
+        outlineProvider = ViewOutlineProvider.BACKGROUND
+        clipToOutline = true
+        clipChildren = true
+        clipToPadding = true
+    }
 
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
         if (ev.actionMasked == MotionEvent.ACTION_OUTSIDE) {

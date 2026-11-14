@@ -26,6 +26,16 @@
             style="@style/Body"
             android:text="@string/subtitle" />
 
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/app_version"
+            android:textColor="@color/accent"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.08" />
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -75,6 +85,32 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/perm_notif_grant" />
+        </LinearLayout>
+
+        <LinearLayout style="@style/Card">
+
+            <TextView
+                style="@style/CardTitle"
+                android:text="@string/search_engine" />
+
+            <TextView
+                style="@style/Body"
+                android:text="@string/search_engine_help" />
+
+            <Spinner
+                android:id="@+id/search_engine"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_url"
+                android:paddingHorizontal="12dp" />
+
+            <Button
+                android:id="@+id/btn_manage_search"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="@string/se_manage" />
         </LinearLayout>
 
         <LinearLayout style="@style/Card">
