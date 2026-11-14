@@ -1,145 +1,164 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    root: transparent; its padding leaves room for the drop shadow.
+    card: the visible window. It is clipped to a rounded outline in code (FloatingWindow.applyStyle),
+          which also rounds the WebView, toolbar and handles. Its padding is the border thickness.
+-->
 <com.nnexe.overlaybrowser.OverlayRootView xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/root"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@drawable/bg_window"
-    android:padding="1dp">
+    android:layout_height="match_parent">
 
-    <LinearLayout
+    <FrameLayout
+        android:id="@+id/card"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:layout_height="match_parent">
 
         <LinearLayout
-            android:id="@+id/toolbar"
             android:layout_width="match_parent"
-            android:layout_height="40dp"
-            android:background="@drawable/bg_toolbar"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingStart="2dp"
-            android:paddingEnd="4dp">
+            android:layout_height="match_parent"
+            android:orientation="vertical">
 
-            <ImageView
-                android:id="@+id/drag_handle"
-                android:layout_width="28dp"
-                android:layout_height="match_parent"
-                android:contentDescription="@string/move"
-                android:paddingVertical="10dp"
-                android:src="@drawable/ic_drag"
-                android:tint="@color/text_dim" />
+            <LinearLayout
+                android:id="@+id/toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:background="@color/bar"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="2dp"
+                android:paddingEnd="4dp">
 
-            <ImageButton
-                android:id="@+id/btn_back"
-                style="@style/BarButton"
-                android:contentDescription="@string/back"
-                android:src="@drawable/ic_back" />
+                <ImageView
+                    android:id="@+id/drag_handle"
+                    android:layout_width="28dp"
+                    android:layout_height="match_parent"
+                    android:contentDescription="@string/move"
+                    android:paddingVertical="10dp"
+                    android:src="@drawable/ic_drag"
+                    android:tint="@color/text_dim" />
 
-            <ImageButton
-                android:id="@+id/btn_reload"
-                style="@style/BarButton"
-                android:contentDescription="@string/reload"
-                android:src="@drawable/ic_refresh" />
+                <ImageButton
+                    android:id="@+id/btn_back"
+                    style="@style/BarButton"
+                    android:contentDescription="@string/back"
+                    android:src="@drawable/ic_back" />
 
-            <EditText
-                android:id="@+id/url"
-                android:layout_width="0dp"
-                android:layout_height="30dp"
-                android:layout_marginHorizontal="4dp"
-                android:layout_weight="1"
-                android:background="@drawable/bg_url"
-                android:hint="@string/url_hint"
-                android:imeOptions="actionGo|flagNoFullscreen|flagNoExtractUi"
-                android:importantForAutofill="no"
-                android:inputType="textUri"
-                android:paddingHorizontal="12dp"
-                android:selectAllOnFocus="true"
-                android:singleLine="true"
-                android:textColor="@color/text"
-                android:textColorHint="@color/text_dim"
-                android:textSize="13sp" />
+                <ImageButton
+                    android:id="@+id/btn_reload"
+                    style="@style/BarButton"
+                    android:contentDescription="@string/reload"
+                    android:src="@drawable/ic_refresh" />
 
-            <!-- Takes the address bar's place in video mode, so the bar's empty middle still drags the window. -->
+                <EditText
+                    android:id="@+id/url"
+                    android:layout_width="0dp"
+                    android:layout_height="30dp"
+                    android:layout_marginHorizontal="4dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_url"
+                    android:hint="@string/url_hint"
+                    android:imeOptions="actionGo|flagNoFullscreen|flagNoExtractUi"
+                    android:importantForAutofill="no"
+                    android:inputType="textUri"
+                    android:paddingHorizontal="12dp"
+                    android:selectAllOnFocus="true"
+                    android:singleLine="true"
+                    android:textColor="@color/text"
+                    android:textColorHint="@color/text_dim"
+                    android:textSize="13sp" />
+
+                <!-- Takes the address bar's place in video mode, so the bar's empty middle still drags the window. -->
+                <View
+                    android:id="@+id/bar_spacer"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:visibility="gone" />
+
+                <ImageButton
+                    android:id="@+id/btn_fit"
+                    style="@style/BarButton"
+                    android:contentDescription="@string/fit_video"
+                    android:src="@drawable/ic_fit_video"
+                    android:visibility="gone" />
+
+                <ImageButton
+                    android:id="@+id/btn_menu"
+                    style="@style/BarButton"
+                    android:contentDescription="@string/menu"
+                    android:src="@drawable/ic_more" />
+
+                <ImageButton
+                    android:id="@+id/btn_mute"
+                    style="@style/BarButton"
+                    android:contentDescription="@string/mute"
+                    android:src="@drawable/ic_volume_on" />
+
+                <ImageButton
+                    android:id="@+id/btn_lock"
+                    style="@style/BarButton"
+                    android:contentDescription="@string/lock"
+                    android:src="@drawable/ic_lock_open" />
+
+                <ImageButton
+                    android:id="@+id/btn_minimize"
+                    style="@style/BarButton"
+                    android:contentDescription="@string/minimize"
+                    android:src="@drawable/ic_minimize" />
+
+                <ImageButton
+                    android:id="@+id/btn_close"
+                    style="@style/BarButton"
+                    android:contentDescription="@string/close"
+                    android:src="@drawable/ic_close" />
+            </LinearLayout>
+
             <View
-                android:id="@+id/bar_spacer"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
+                android:id="@+id/progress"
+                android:layout_width="match_parent"
+                android:layout_height="2dp"
+                android:background="@color/accent"
+                android:transformPivotX="0dp"
+                android:visibility="invisible" />
+
+            <com.nnexe.overlaybrowser.FreezableFrame
+                android:id="@+id/web_holder"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
                 android:layout_weight="1"
-                android:visibility="gone" />
-
-            <ImageButton
-                android:id="@+id/btn_fit"
-                style="@style/BarButton"
-                android:contentDescription="@string/fit_video"
-                android:src="@drawable/ic_fit_video"
-                android:visibility="gone" />
-
-            <ImageButton
-                android:id="@+id/btn_menu"
-                style="@style/BarButton"
-                android:contentDescription="@string/menu"
-                android:src="@drawable/ic_more" />
-
-            <ImageButton
-                android:id="@+id/btn_mute"
-                style="@style/BarButton"
-                android:contentDescription="@string/mute"
-                android:src="@drawable/ic_volume_on" />
-
-            <ImageButton
-                android:id="@+id/btn_lock"
-                style="@style/BarButton"
-                android:contentDescription="@string/lock"
-                android:src="@drawable/ic_lock_open" />
-
-            <ImageButton
-                android:id="@+id/btn_minimize"
-                style="@style/BarButton"
-                android:contentDescription="@string/minimize"
-                android:src="@drawable/ic_minimize" />
-
-            <ImageButton
-                android:id="@+id/btn_close"
-                style="@style/BarButton"
-                android:contentDescription="@string/close"
-                android:src="@drawable/ic_close" />
+                android:background="#FFFFFFFF" />
         </LinearLayout>
 
+        <!-- Invisible bottom-edge strip: drag it to change only the height. Margins keep it clear of the corners. -->
         <View
-            android:id="@+id/progress"
+            android:id="@+id/resize_bottom"
             android:layout_width="match_parent"
-            android:layout_height="2dp"
-            android:background="@color/accent"
-            android:transformPivotX="0dp"
-            android:visibility="invisible" />
+            android:layout_height="16dp"
+            android:layout_gravity="bottom"
+            android:layout_marginHorizontal="44dp"
+            android:contentDescription="@string/resize" />
 
-        <com.nnexe.overlaybrowser.FreezableFrame
-            android:id="@+id/web_holder"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:background="#FFFFFFFF" />
-    </LinearLayout>
+        <!-- Corner handles: 40dp touch targets (the old ones were 30dp). Margins are set in code to sit inside the rounded corner. -->
+        <ImageView
+            android:id="@+id/resize_bl"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_gravity="bottom|start"
+            android:contentDescription="@string/resize"
+            android:padding="9dp"
+            android:scaleX="-1"
+            android:src="@drawable/ic_resize"
+            android:tint="@color/accent" />
 
-    <ImageView
-        android:id="@+id/resize_bl"
-        android:layout_width="30dp"
-        android:layout_height="30dp"
-        android:layout_gravity="bottom|start"
-        android:contentDescription="@string/resize"
-        android:padding="4dp"
-        android:scaleX="-1"
-        android:src="@drawable/ic_resize"
-        android:tint="@color/accent" />
-
-    <ImageView
-        android:id="@+id/resize_br"
-        android:layout_width="30dp"
-        android:layout_height="30dp"
-        android:layout_gravity="bottom|end"
-        android:contentDescription="@string/resize"
-        android:padding="4dp"
-        android:src="@drawable/ic_resize"
-        android:tint="@color/accent" />
+        <ImageView
+            android:id="@+id/resize_br"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_gravity="bottom|end"
+            android:contentDescription="@string/resize"
+            android:padding="9dp"
+            android:src="@drawable/ic_resize"
+            android:tint="@color/accent" />
+    </FrameLayout>
 </com.nnexe.overlaybrowser.OverlayRootView>

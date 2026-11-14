@@ -74,5 +74,27 @@
     <string name="freeform_off">Freeform windows: off. Brave will open full screen. To make it float, go to Developer options → \"Enable freeform windows\", then restart.</string>
     <string name="freeform_unknown">Freeform windows: couldn\'t detect. If Brave opens full screen, go to Developer options → \"Enable freeform windows\", then restart.</string>
     <string name="tips">Tips</string>
-    <string name="tips_body">• Drag the ⠿ grip or the empty part of the toolbar to move the window. Drag a bottom corner to resize it.\n• 🔒 locks the position and size. — minimizes to a bubble: tap the bubble to restore it, long-press it for more options. Audio keeps playing while minimized.\n• Touching the page doesn\'t take your gamepad away from the game. The window only takes keyboard focus while you type. Tap outside it, or press Back, to give control back to the game.\n• Watching a video? Tap the ▣ button on the bar: the window shows only the player and takes the video\'s exact shape, and keeps that shape as you resize it. YouTube videos do this on their own (turn it off in ⋮). Tap ▣ again for the full page.\n• ⋮ → Opacity makes the window see-through (10–100%), handy for keeping an eye on the game behind a guide or video.\n• Add the \"Float browser\" tile in Quick Settings to show/hide the window from anywhere.\n• Share any link to \"Open in floating browser\" to open it in the floating window.</string>
+    <string name="tips_body">• Drag the ⠿ grip or the empty part of the toolbar to move the window. Drag a bottom corner (or the bottom edge) to resize it.\n• 🔒 locks the position and size. — minimizes to a bubble: tap the bubble to restore it, long-press it for more options. Audio keeps playing while minimized.\n• Touching the page doesn\'t take your gamepad away from the game. The window only takes keyboard focus while you type. Tap outside it, or press Back, to give control back to the game.\n• Watching a video? Tap the ▣ button on the bar: the window shows only the player and takes the video\'s exact shape, and keeps that shape as you resize it. YouTube videos do this on their own (turn it off in ⋮). Tap ▣ again for the full page.\n• ⋮ → Opacity makes the window see-through (10–100%), handy for keeping an eye on the game behind a guide or video.\n• Add the \"Float browser\" tile in Quick Settings to show/hide the window from anywhere.\n• Share any link to \"Open in floating browser\" to open it in the floating window.</string>
+
+    <!-- Appearance -->
+    <string name="appearance">Appearance</string>
+    <string name="appearance_help">Changes show on the floating window straight away and are remembered.</string>
+    <string name="presets">Style presets</string>
+    <string name="preset_minimal">Minimal</string>
+    <string name="preset_rounded">Rounded</string>
+    <string name="preset_ultra">Ultra Rounded</string>
+    <string name="preset_glass">Liquid Glass</string>
+    <string name="rounded_corners">Rounded corners</string>
+    <string name="corner_radius">Corner radius</string>
+    <string name="border_thickness">Border thickness</string>
+    <string name="shadow_intensity">Shadow intensity</string>
+    <string name="dp_value">%1$d dp</string>
+    <string name="glass_style">Frosted-glass style</string>
+    <string name="blur_background">Blur what\'s behind the window</string>
+    <string name="blur_help">Asks Android to blur the screen behind the window. Android blurs a plain rectangle, so with large corners the blur can show past them. Turn it off if you notice that.</string>
+    <string name="blur_unsupported">Not available here: it needs Android 12 or later with window blur enabled (some devices turn it off in power saving or developer options).</string>
+    <string name="compact_bar">Compact toolbar</string>
+    <string name="theme_label">Window theme</string>
+    <string name="theme_dark">Dark</string>
+    <string name="theme_amoled">AMOLED black</string>
 </resources>

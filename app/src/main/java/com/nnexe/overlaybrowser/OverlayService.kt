@@ -23,6 +23,7 @@ import android.widget.Toast
 class OverlayService : Service(), FloatingWindow.Listener {
 
     private var window: FloatingWindow? = null
+    private var closing = false
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -51,7 +52,7 @@ class OverlayService : Service(), FloatingWindow.Listener {
         val url = intent?.getStringExtra(EXTRA_URL)
         when (intent?.action) {
             ACTION_STOP_SELF -> {
-                stopSelf()
+                closeAnimated()
                 return START_NOT_STICKY
             }
             ACTION_TOGGLE -> {
@@ -94,10 +95,22 @@ class OverlayService : Service(), FloatingWindow.Listener {
         window = FloatingWindow(themed, getSystemService(WindowManager::class.java), Prefs(this), url, this)
     }
 
+    /** Fades the window out, then stops the service (which removes it). Falls back to stopping at once. */
+    private fun closeAnimated() {
+        if (closing) return
+        val w = window
+        if (w == null) {
+            stopSelf()
+            return
+        }
+        closing = true
+        w.animateOut { stopSelf() }
+    }
+
     // FloatingWindow.Listener
 
     override fun onCloseRequested() {
-        stopSelf()
+        closeAnimated()
     }
 
     override fun onMinimizedChanged(minimized: Boolean) {
@@ -184,7 +197,7 @@ class OverlayService : Service(), FloatingWindow.Listener {
             context.startForegroundService(Intent(context, OverlayService::class.java).setAction(ACTION_TOGGLE))
         }
 
-        /** Re-reads settings (like opacity) into the floating window, if it's open. */
+        /** Re-reads settings (like opacity or appearance) into the floating window, if it's open. */
         fun refresh(context: Context) {
             if (isRunning) context.startService(Intent(context, OverlayService::class.java).setAction(ACTION_REFRESH))
         }
